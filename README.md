@@ -53,15 +53,20 @@ Alle sechs geplanten Phasen sind in einer ersten, funktionsfähigen Version umge
    "Bearbeiten" lassen sich Name/Anlagentyp nachträglich ändern, über "Löschen" die
    Anlage inkl. aller zugehörigen Prüfungen, Mängel, Dokumente und Sensor-Zuordnungen
    entfernen (mit Bestätigungsabfrage).
-2. Anlage anklicken → Sensoren zuordnen: Kennzahl eingeben (z. B. `pv_yield_kwh`), dann
-   **Gerät wählen** und daraus den passenden Sensor auswählen — die Entity-ID muss nicht
-   mehr von Hand getippt werden (Freitext-Feld bleibt als Fallback für Sensoren ohne
+2. Anlage anklicken → **Gerät wählen** (z. B. den Wechselrichter): TechDoc schlägt anhand
+   von Name, Einheit und `device_class` der Sensoren automatisch passende Zuordnungen vor
+   (z. B. "Jahresertrag → Wechselrichter Ertrag") — per Klick auf "Übernehmen" übernommen,
+   ohne `entity_id` oder Kennzahl von Hand einzutippen. Für alles, was nicht automatisch
+   erkannt wird, bleibt die manuelle Zuordnung (Kennzahl eingeben + Sensor aus der
+   Geräteliste wählen oder Entity-ID direkt eintippen als Fallback für Sensoren ohne
    Gerätezuordnung). Ob es sich um eine Summe (Energie/Ertrag) oder einen Mittelwert
-   (COP, Temperatur) handelt, wird automatisch aus dem `state_class`-Attribut des
-   Sensors erkannt. Voraussetzung ist, dass die Entity in Home Assistant überhaupt
-   Langzeitstatistiken führt (`state_class: measurement/total/total_increasing`); ist das
-   nicht der Fall, meldet das Panel das explizit statt einfach "keine Daten" zu zeigen.
-   Danach ist der Jahresvergleich über den Kennzahl-Link abrufbar.
+   (COP, Temperatur) handelt, wird in beiden Fällen automatisch aus dem
+   `state_class`-Attribut des Sensors erkannt — nie eine Vermutung, sondern nur ein
+   Vorschlag, den man ablehnen/überschreiben kann. Voraussetzung ist, dass die Entity in
+   Home Assistant überhaupt Langzeitstatistiken führt
+   (`state_class: measurement/total/total_increasing`); ist das nicht der Fall, meldet das
+   Panel das explizit statt einfach "keine Daten" zu zeigen. Danach ist der
+   Jahresvergleich über den Kennzahl-Link abrufbar.
 3. Prüfung starten, Checkliste/Messwerte erfassen, abschließen → nächster Prüftermin wird
    automatisch aus dem Prüfintervall berechnet; 30 Tage vorher erscheint eine
    Persistent Notification in Home Assistant.

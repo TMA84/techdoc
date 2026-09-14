@@ -19,28 +19,116 @@ DEFAULT_ANALYSIS_INTERVAL_MINUTES = 60
 # custom plant types) can still be mapped to an arbitrary free-form
 # metric_key, so this list never limits what is possible, only what is
 # pre-suggested.
-PLANT_TYPE_METRICS: dict[str, list[dict[str, str | None]]] = {
+#
+# "hints" and "device_classes" feed the best-effort entity-suggestion
+# heuristic in ha_bridge/matching.py: a device's sensor is only ever
+# *suggested*, never auto-applied without the user clicking "Übernehmen".
+PLANT_TYPE_METRICS: dict[str, list[dict]] = {
     "pv": [
-        {"key": "pv_yield_kwh", "name": "Jahresertrag", "unit": "kWh", "kind": "sum"},
-        {"key": "pv_self_consumption_kwh", "name": "Eigenverbrauch", "unit": "kWh", "kind": "sum"},
-        {"key": "pv_grid_export_kwh", "name": "Einspeisung", "unit": "kWh", "kind": "sum"},
-        {"key": "pv_grid_import_kwh", "name": "Netzbezug", "unit": "kWh", "kind": "sum"},
+        {
+            "key": "pv_yield_kwh",
+            "name": "Jahresertrag",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["ertrag", "yield", "erzeugung", "produktion", "production", "generated"],
+        },
+        {
+            "key": "pv_self_consumption_kwh",
+            "name": "Eigenverbrauch",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["eigenverbrauch", "self consumption", "self-consumption"],
+        },
+        {
+            "key": "pv_grid_export_kwh",
+            "name": "Einspeisung",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["einspeisung", "export", "feed in", "feed-in", "feedin"],
+        },
+        {
+            "key": "pv_grid_import_kwh",
+            "name": "Netzbezug",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["netzbezug", "bezug", "import", "grid consumption"],
+        },
     ],
     "heatpump": [
-        {"key": "heatpump_power_kwh", "name": "Stromverbrauch", "unit": "kWh", "kind": "sum"},
-        {"key": "heatpump_heat_kwh", "name": "Wärmeerzeugung", "unit": "kWh", "kind": "sum"},
-        {"key": "heatpump_cop", "name": "COP", "unit": None, "kind": "mean"},
-        {"key": "heatpump_flow_temp", "name": "Vorlauftemperatur", "unit": "°C", "kind": "mean"},
+        {
+            "key": "heatpump_power_kwh",
+            "name": "Stromverbrauch",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["stromverbrauch", "power consumption", "electrical energy", "verbrauch"],
+        },
+        {
+            "key": "heatpump_heat_kwh",
+            "name": "Wärmeerzeugung",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["wärme", "waerme", "heat", "thermal energy", "wärmemenge", "waermemenge"],
+        },
+        {
+            "key": "heatpump_cop",
+            "name": "COP",
+            "unit": None,
+            "kind": "mean",
+            "device_classes": [],
+            "hints": ["cop", "leistungszahl", "coefficient of performance"],
+        },
+        {
+            "key": "heatpump_flow_temp",
+            "name": "Vorlauftemperatur",
+            "unit": "°C",
+            "kind": "mean",
+            "device_classes": ["temperature"],
+            "hints": ["vorlauf", "flow temperature", "flow temp"],
+        },
     ],
     "wallbox": [
-        {"key": "wallbox_energy_kwh", "name": "Ladeenergie", "unit": "kWh", "kind": "sum"},
+        {
+            "key": "wallbox_energy_kwh",
+            "name": "Ladeenergie",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["ladeenergie", "charging energy", "charged energy", "energy session"],
+        },
     ],
     "battery": [
-        {"key": "battery_charge_kwh", "name": "Ladeenergie", "unit": "kWh", "kind": "sum"},
-        {"key": "battery_discharge_kwh", "name": "Entladeenergie", "unit": "kWh", "kind": "sum"},
+        {
+            "key": "battery_charge_kwh",
+            "name": "Ladeenergie",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["ladeenergie", "charge energy", "laden", "charging"],
+        },
+        {
+            "key": "battery_discharge_kwh",
+            "name": "Entladeenergie",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["entladeenergie", "discharge energy", "entladen", "discharging"],
+        },
     ],
     "solar_thermal": [
-        {"key": "solar_thermal_yield_kwh", "name": "Solarertrag", "unit": "kWh", "kind": "sum"},
+        {
+            "key": "solar_thermal_yield_kwh",
+            "name": "Solarertrag",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": ["solarertrag", "solar yield", "kollektor", "collector"],
+        },
     ],
 }
 

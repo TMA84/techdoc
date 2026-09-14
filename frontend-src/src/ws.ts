@@ -12,6 +12,7 @@ import type {
   HomeAssistant,
   Inspection,
   MetricCatalogue,
+  MetricSuggestion,
   Plant,
   PlantType,
   SensorMapping,
@@ -49,6 +50,13 @@ export const fetchDevices = (hass: HomeAssistant): Promise<Device[]> =>
 
 export const fetchDeviceEntities = (hass: HomeAssistant, deviceId: string): Promise<DeviceEntity[]> =>
   hass.callWS({ type: "techdoc/device_entities", device_id: deviceId });
+
+export const fetchDeviceEntitySuggestions = (
+  hass: HomeAssistant,
+  plantId: number,
+  deviceId: string
+): Promise<MetricSuggestion[]> =>
+  hass.callWS({ type: "techdoc/device_entity_suggestions", plant_id: plantId, device_id: deviceId });
 
 export const fetchInspections = (hass: HomeAssistant, plantId: number): Promise<Inspection[]> =>
   hass.callWS({ type: "techdoc/inspection_list", plant_id: plantId });

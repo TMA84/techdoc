@@ -9,6 +9,7 @@ import {
   deleteSensorMapping,
   fetchAnomalies,
   fetchDeviceEntities,
+  fetchDeviceEntitySuggestions,
   fetchDevices,
   fetchDocuments,
   fetchInspections,
@@ -29,6 +30,7 @@ import type {
   HomeAssistant,
   Inspection,
   MetricCatalogue,
+  MetricSuggestion,
   Plant,
   SensorMapping,
   YearlyTotalsResult,
@@ -57,6 +59,7 @@ export class TechdocPlantDetail extends LitElement {
   @state() private _deviceEntities: DeviceEntity[] = [];
   @state() private _selectedDeviceId = "";
   @state() private _entityIdDraft = "";
+  @state() private _suggestions: MetricSuggestion[] = [];
 
   static styles = sharedStyles;
 
@@ -68,6 +71,7 @@ export class TechdocPlantDetail extends LitElement {
         this._yearlyTotalsMetricKey = null;
         this._selectedDeviceId = "";
         this._deviceEntities = [];
+        this._suggestions = [];
         void this._load();
         if (!this._devices.length) {
           void fetchDevices(this.hass).then((devices) => (this._devices = devices));
@@ -151,7 +155,19 @@ export class TechdocPlantDetail extends LitElement {
   private async _handleDeviceChange(event: Event) {
     const deviceId = (event.target as HTMLSelectElement).value;
     this._selectedDeviceId = deviceId;
-    this._deviceEntities = deviceId ? await fetchDeviceEntities(this.hass, deviceId) : [];
+    if (!deviceId) {
+      this._deviceEntities = [];
+      this._suggestions = [];
+      return;
+    }
+    await guarded(this, async () => {
+      const [entities, suggestions] = await Promise.all([
+        fetchDeviceEntities(this.hass, deviceId),
+        fetchDeviceEntitySuggestions(this.hass, this.plant.id, deviceId),
+      ]);
+      this._deviceEntities = entities;
+      this._suggestions = suggestions;
+    });
   }
 
   private _handleEntityPick(event: Event) {
@@ -159,6 +175,14 @@ export class TechdocPlantDetail extends LitElement {
     if (entityId) {
       this._entityIdDraft = entityId;
     }
+  }
+
+  private async _handleApplySuggestion(suggestion: MetricSuggestion) {
+    await guarded(this, async () => {
+      await upsertSensorMapping(this.hass, this.plant.id, suggestion.metric_key, suggestion.entity_id);
+      this._suggestions = this._suggestions.filter((s) => s.metric_key !== suggestion.metric_key);
+      await this._load();
+    });
   }
 
   private async _handleAddSensorMapping(event: SubmitEvent) {
@@ -185,6 +209,7 @@ export class TechdocPlantDetail extends LitElement {
       this._entityIdDraft = "";
       this._deviceEntities = [];
       this._selectedDeviceId = "";
+      this._suggestions = [];
       await this._load();
     });
   }
@@ -368,15 +393,35 @@ export class TechdocPlantDetail extends LitElement {
               `
             )
           : html`<p class="empty">Noch keine Sensoren zugeordnet.</p>`}
+        <h3>Gerät wählen</h3>
+        <select class="inline" @change=${this._handleDeviceChange} .value=${this._selectedDeviceId}>
+          <option value="">Gerät wählen …</option>
+          ${this._devices.map((d) => html`<option value=${d.id}>${d.name}</option>`)}
+        </select>
+
+        ${this._suggestions.length
+          ? html`
+              <h3>Vorschläge für dieses Gerät</h3>
+              ${this._suggestions.map(
+                (s) => html`
+                  <div class="row">
+                    <div class="row-main">
+                      <span class="row-title">${s.metric_name}</span>
+                      <span class="row-subtitle">${s.entity_name} (${s.entity_id})</span>
+                    </div>
+                    <button @click=${() => this._handleApplySuggestion(s)}>Übernehmen</button>
+                  </div>
+                `
+              )}
+            `
+          : nothing}
+
+        <h3>Manuell zuordnen</h3>
         <form class="inline" @submit=${this._handleAddSensorMapping}>
           <input name="metric_key" list="metric-key-options" placeholder="Kennzahl (metric_key)" required />
           <datalist id="metric-key-options">
             ${options.map((m) => html`<option value=${m.key}>${m.name}</option>`)}
           </datalist>
-          <select @change=${this._handleDeviceChange} .value=${this._selectedDeviceId}>
-            <option value="">Gerät wählen …</option>
-            ${this._devices.map((d) => html`<option value=${d.id}>${d.name}</option>`)}
-          </select>
           <select @change=${this._handleEntityPick} ?disabled=${!this._deviceEntities.length}>
             <option value="">${this._deviceEntities.length ? "Sensor wählen …" : "(erst Gerät wählen)"}</option>
             ${this._deviceEntities.map(

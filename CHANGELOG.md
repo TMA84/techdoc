@@ -8,6 +8,19 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-14
+
+### Added
+
+- Automatic sensor-mapping suggestions: after picking a device, the panel
+  now proposes matches for the plant type's metric catalogue (e.g. "Jahresertrag
+  → Wechselrichter Ertrag") based on the entity's name, `device_class`, unit,
+  and `state_class`/aggregation compatibility (`ha_bridge/matching.py`, unit
+  tested; new `techdoc/device_entity_suggestions` websocket command). A
+  suggestion is only ever applied by clicking "Übernehmen" — never silently
+  auto-mapped — and an entity whose statistic kind (sum/mean) doesn't match
+  the metric is never suggested regardless of how well its name matches.
+
 ## [0.5.0] - 2026-09-14
 
 ### Added

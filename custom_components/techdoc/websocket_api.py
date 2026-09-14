@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, PLANT_TYPE_METRICS
 from .db.engine import Database
 from .ha_bridge.devices import list_device_entities, list_devices
+from .ha_bridge.matching import EntityCandidate, suggest_matches
 from .ha_bridge.statistics import async_available_statistic_ids
 from .metrics import async_yearly_totals
 from .reports import async_generate_annual_report, async_generate_inspection_report
@@ -147,6 +148,48 @@ async def ws_device_list(hass: HomeAssistant, connection, msg) -> None:
 @websocket_api.async_response
 async def ws_device_entities(hass: HomeAssistant, connection, msg) -> None:
     connection.send_result(msg["id"], _as_dicts(list_device_entities(hass, msg["device_id"])))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "techdoc/device_entity_suggestions",
+        vol.Required("plant_id"): int,
+        vol.Required("device_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_device_entity_suggestions(hass: HomeAssistant, connection, msg) -> None:
+    database = _get_database(hass)
+    repo = database.repository
+
+    plant = await database.async_run(repo.get_plant, msg["plant_id"])
+    if plant is None:
+        connection.send_error(msg["id"], "not_found", "Anlage nicht gefunden")
+        return
+    plant_type = next(
+        (pt for pt in await database.async_run(repo.list_plant_types) if pt.id == plant.plant_type_id),
+        None,
+    )
+    metrics = PLANT_TYPE_METRICS.get(plant_type.key, []) if plant_type else []
+
+    already_mapped = {
+        m.metric_key for m in await database.async_run(repo.list_sensor_mappings, msg["plant_id"])
+    }
+    unmapped_metrics = [m for m in metrics if m["key"] not in already_mapped]
+
+    candidates = [
+        EntityCandidate(
+            entity_id=e.entity_id,
+            name=e.name,
+            device_class=e.device_class,
+            state_class=e.state_class,
+            unit=e.unit,
+        )
+        for e in list_device_entities(hass, msg["device_id"])
+    ]
+
+    suggestions = suggest_matches(unmapped_metrics, candidates)
+    connection.send_result(msg["id"], _as_dicts(suggestions))
 
 
 # -- sensor mappings & HA statistics ----------------------------------------
@@ -630,6 +673,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
         ws_plant_delete,
         ws_device_list,
         ws_device_entities,
+        ws_device_entity_suggestions,
         ws_metric_catalogue,
         ws_sensor_mapping_list,
         ws_sensor_mapping_upsert,

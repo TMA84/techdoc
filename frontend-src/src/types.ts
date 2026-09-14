@@ -89,6 +89,14 @@ export interface DeviceEntity {
   unit: string | null;
 }
 
+export interface MetricSuggestion {
+  metric_key: string;
+  metric_name: string;
+  entity_id: string;
+  entity_name: string;
+  score: number;
+}
+
 export interface Anomaly {
   id: number;
   analysis_result_id: number;
