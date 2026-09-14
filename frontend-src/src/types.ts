@@ -76,6 +76,19 @@ export interface SensorMapping {
   aggregation: string;
 }
 
+export interface Device {
+  id: string;
+  name: string;
+}
+
+export interface DeviceEntity {
+  entity_id: string;
+  name: string;
+  device_class: string | null;
+  state_class: string | null;
+  unit: string | null;
+}
+
 export interface Anomaly {
   id: number;
   analysis_result_id: number;

@@ -109,6 +109,12 @@ ergänzt, ohne bestehenden Code zu ändern.
 - **Services:** `start`, `complete`, `add_finding`, `close_finding`, `run_analysis`,
   `generate_report` (schrittweise ab Phase 2/4 implementiert).
 - **Historische Daten:** ausschließlich über `recorder.statistics`/`history`.
+- **Geräte-/Entity-Auswahl:** `ha_bridge/devices.py` listet Geräte und deren
+  statistikfähige Entities (per `device_registry`/`entity_registry`) für die
+  Sensor-Zuordnung im Panel — Nutzer wählen ein Gerät + Sensor statt eine
+  `entity_id` auswendig zu kennen. Aggregation (Summe/Mittelwert) und Einheit
+  werden serverseitig aus dem `state_class`-/`unit_of_measurement`-Attribut
+  der gewählten Entity abgeleitet, nicht vom Client übernommen.
 
 ## 5. Analysekonzept
 

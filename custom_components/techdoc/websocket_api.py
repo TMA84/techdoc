@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, PLANT_TYPE_METRICS
 from .db.engine import Database
+from .ha_bridge.devices import list_device_entities, list_devices
 from .ha_bridge.statistics import async_available_statistic_ids
 from .metrics import async_yearly_totals
 from .reports import async_generate_annual_report, async_generate_inspection_report
@@ -131,6 +132,23 @@ async def ws_plant_delete(hass: HomeAssistant, connection, msg) -> None:
     connection.send_result(msg["id"], {})
 
 
+# -- device/entity discovery --------------------------------------------------
+
+
+@websocket_api.websocket_command({vol.Required("type"): "techdoc/device_list"})
+@websocket_api.async_response
+async def ws_device_list(hass: HomeAssistant, connection, msg) -> None:
+    connection.send_result(msg["id"], _as_dicts(list_devices(hass)))
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "techdoc/device_entities", vol.Required("device_id"): str}
+)
+@websocket_api.async_response
+async def ws_device_entities(hass: HomeAssistant, connection, msg) -> None:
+    connection.send_result(msg["id"], _as_dicts(list_device_entities(hass, msg["device_id"])))
+
+
 # -- sensor mappings & HA statistics ----------------------------------------
 
 
@@ -150,6 +168,30 @@ async def ws_sensor_mapping_list(hass: HomeAssistant, connection, msg) -> None:
     connection.send_result(msg["id"], _as_dicts(mappings))
 
 
+_STATE_CLASS_TO_AGGREGATION = {
+    "measurement": "mean",
+    "total": "sum",
+    "total_increasing": "sum",
+}
+
+
+def _infer_aggregation_and_unit(
+    hass: HomeAssistant, entity_id: str, requested_unit: str | None
+) -> tuple[str, str | None]:
+    """Derive aggregation from the entity's own `state_class`, and fall back
+    to its `unit_of_measurement` if the caller didn't suggest one — the
+    entity's live state is authoritative, not whatever the panel guessed
+    from a metric-catalogue entry."""
+    state = hass.states.get(entity_id)
+    if state is None:
+        return "sum", requested_unit
+
+    state_class = state.attributes.get("state_class")
+    aggregation = _STATE_CLASS_TO_AGGREGATION.get(state_class, "sum")
+    unit = requested_unit or state.attributes.get("unit_of_measurement")
+    return aggregation, unit
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "techdoc/sensor_mapping_upsert",
@@ -157,21 +199,21 @@ async def ws_sensor_mapping_list(hass: HomeAssistant, connection, msg) -> None:
         vol.Required("metric_key"): str,
         vol.Required("entity_id"): str,
         vol.Optional("unit"): str,
-        vol.Optional("aggregation"): str,
     }
 )
 @websocket_api.async_response
 async def ws_sensor_mapping_upsert(hass: HomeAssistant, connection, msg) -> None:
     database = _get_database(hass)
-    extra_fields = {key: msg[key] for key in ("unit", "aggregation") if key in msg}
+    aggregation, unit = _infer_aggregation_and_unit(hass, msg["entity_id"], msg.get("unit"))
     mapping_id = await database.async_run(
         database.repository.upsert_sensor_mapping,
         msg["plant_id"],
         msg["metric_key"],
         msg["entity_id"],
-        **extra_fields,
+        unit=unit,
+        aggregation=aggregation,
     )
-    connection.send_result(msg["id"], {"id": mapping_id})
+    connection.send_result(msg["id"], {"id": mapping_id, "aggregation": aggregation, "unit": unit})
 
 
 @websocket_api.websocket_command(
@@ -586,6 +628,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
         ws_plant_create,
         ws_plant_update,
         ws_plant_delete,
+        ws_device_list,
+        ws_device_entities,
         ws_metric_catalogue,
         ws_sensor_mapping_list,
         ws_sensor_mapping_upsert,

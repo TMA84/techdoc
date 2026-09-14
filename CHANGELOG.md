@@ -8,6 +8,25 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-14
+
+### Added
+
+- Sensor mapping now offers a device picker: pick a Home Assistant device,
+  then pick one of its statistics-eligible sensors, instead of typing an
+  `entity_id` from memory (the free-text field remains as a fallback for
+  entities not tied to a device). Backed by new `techdoc/device_list` and
+  `techdoc/device_entities` websocket commands
+  (`ha_bridge/devices.py`, using `device_registry`/`entity_registry`).
+
+### Changed
+
+- Aggregation ("sum" vs "mean") and unit for a sensor mapping are no longer
+  a manual choice — `techdoc/sensor_mapping_upsert` now derives them
+  server-side from the entity's own `state_class`/`unit_of_measurement`
+  attributes, which is both less work and can't be set inconsistently with
+  the entity's actual statistic type.
+
 ## [0.4.0] - 2026-09-14
 
 ### Fixed

@@ -8,6 +8,8 @@ import {
   createInspection,
   deleteSensorMapping,
   fetchAnomalies,
+  fetchDeviceEntities,
+  fetchDevices,
   fetchDocuments,
   fetchInspections,
   fetchFindings,
@@ -20,6 +22,8 @@ import {
 } from "./ws";
 import type {
   Anomaly,
+  Device,
+  DeviceEntity,
   DocumentRecord,
   Finding,
   HomeAssistant,
@@ -49,6 +53,10 @@ export class TechdocPlantDetail extends LitElement {
   @state() private _documents: DocumentRecord[] = [];
   @state() private _yearlyTotals: YearlyTotalsResult | null = null;
   @state() private _yearlyTotalsMetricKey: string | null = null;
+  @state() private _devices: Device[] = [];
+  @state() private _deviceEntities: DeviceEntity[] = [];
+  @state() private _selectedDeviceId = "";
+  @state() private _entityIdDraft = "";
 
   static styles = sharedStyles;
 
@@ -58,7 +66,12 @@ export class TechdocPlantDetail extends LitElement {
       if (!previous || previous.id !== this.plant.id) {
         this._yearlyTotals = null;
         this._yearlyTotalsMetricKey = null;
+        this._selectedDeviceId = "";
+        this._deviceEntities = [];
         void this._load();
+        if (!this._devices.length) {
+          void fetchDevices(this.hass).then((devices) => (this._devices = devices));
+        }
       }
     }
   }
@@ -135,26 +148,43 @@ export class TechdocPlantDetail extends LitElement {
     });
   }
 
+  private async _handleDeviceChange(event: Event) {
+    const deviceId = (event.target as HTMLSelectElement).value;
+    this._selectedDeviceId = deviceId;
+    this._deviceEntities = deviceId ? await fetchDeviceEntities(this.hass, deviceId) : [];
+  }
+
+  private _handleEntityPick(event: Event) {
+    const entityId = (event.target as HTMLSelectElement).value;
+    if (entityId) {
+      this._entityIdDraft = entityId;
+    }
+  }
+
   private async _handleAddSensorMapping(event: SubmitEvent) {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     await guarded(this, async () => {
       const metricKey = (form.elements.namedItem("metric_key") as HTMLInputElement).value.trim();
       const entityId = (form.elements.namedItem("entity_id") as HTMLInputElement).value.trim();
-      const aggregation = (form.elements.namedItem("aggregation") as HTMLSelectElement).value;
       if (!metricKey || !entityId) {
-        throw new Error("Bitte Kennzahl und Entity-ID angeben.");
+        throw new Error(
+          "Bitte eine Kennzahl angeben und ein Gerät + Sensor auswählen (oder die Entity-ID direkt eingeben)."
+        );
       }
       const catalogueEntry = this._currentMetricOptions().find((m) => m.key === metricKey);
+      // aggregation/unit are inferred server-side from the entity's own state_class
       await upsertSensorMapping(
         this.hass,
         this.plant.id,
         metricKey,
         entityId,
-        catalogueEntry?.unit ?? undefined,
-        aggregation
+        catalogueEntry?.unit ?? undefined
       );
       form.reset();
+      this._entityIdDraft = "";
+      this._deviceEntities = [];
+      this._selectedDeviceId = "";
       await this._load();
     });
   }
@@ -343,13 +373,28 @@ export class TechdocPlantDetail extends LitElement {
           <datalist id="metric-key-options">
             ${options.map((m) => html`<option value=${m.key}>${m.name}</option>`)}
           </datalist>
-          <input name="entity_id" placeholder="z. B. sensor.pv_jahresertrag" required />
-          <select name="aggregation" title="Wie wird der Sensor statistisch erfasst?">
-            <option value="sum">Summe (z. B. Energie, kWh)</option>
-            <option value="mean">Mittelwert (z. B. COP, Temperatur)</option>
+          <select @change=${this._handleDeviceChange} .value=${this._selectedDeviceId}>
+            <option value="">Gerät wählen …</option>
+            ${this._devices.map((d) => html`<option value=${d.id}>${d.name}</option>`)}
           </select>
+          <select @change=${this._handleEntityPick} ?disabled=${!this._deviceEntities.length}>
+            <option value="">${this._deviceEntities.length ? "Sensor wählen …" : "(erst Gerät wählen)"}</option>
+            ${this._deviceEntities.map(
+              (e) => html`<option value=${e.entity_id}>${e.name} (${e.entity_id})</option>`
+            )}
+          </select>
+          <input
+            name="entity_id"
+            placeholder="oder Entity-ID direkt eingeben, z. B. sensor.pv_jahresertrag"
+            .value=${this._entityIdDraft}
+            @input=${(e: Event) => (this._entityIdDraft = (e.target as HTMLInputElement).value)}
+            required
+          />
           <button type="submit">Zuordnen</button>
         </form>
+        <p class="row-subtitle">
+          Summe/Mittelwert wird automatisch aus dem state_class-Attribut des gewählten Sensors erkannt.
+        </p>
         ${this._renderYearlyTotals()}
       </div>
     `;

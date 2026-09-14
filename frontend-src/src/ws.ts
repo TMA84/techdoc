@@ -5,6 +5,8 @@
  */
 import type {
   Anomaly,
+  Device,
+  DeviceEntity,
   DocumentRecord,
   Finding,
   HomeAssistant,
@@ -41,6 +43,12 @@ export const deletePlant = (hass: HomeAssistant, plantId: number): Promise<void>
 
 export const fetchMetricCatalogue = (hass: HomeAssistant): Promise<MetricCatalogue> =>
   hass.callWS({ type: "techdoc/metric_catalogue" });
+
+export const fetchDevices = (hass: HomeAssistant): Promise<Device[]> =>
+  hass.callWS({ type: "techdoc/device_list" });
+
+export const fetchDeviceEntities = (hass: HomeAssistant, deviceId: string): Promise<DeviceEntity[]> =>
+  hass.callWS({ type: "techdoc/device_entities", device_id: deviceId });
 
 export const fetchInspections = (hass: HomeAssistant, plantId: number): Promise<Inspection[]> =>
   hass.callWS({ type: "techdoc/inspection_list", plant_id: plantId });
@@ -100,16 +108,14 @@ export const upsertSensorMapping = (
   plantId: number,
   metricKey: string,
   entityId: string,
-  unit?: string,
-  aggregation?: string
-): Promise<{ id: number }> =>
+  unit?: string
+): Promise<{ id: number; aggregation: string; unit: string | null }> =>
   hass.callWS({
     type: "techdoc/sensor_mapping_upsert",
     plant_id: plantId,
     metric_key: metricKey,
     entity_id: entityId,
     unit,
-    aggregation,
   });
 
 export const deleteSensorMapping = (hass: HomeAssistant, mappingId: number): Promise<void> =>
