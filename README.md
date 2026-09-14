@@ -54,7 +54,12 @@ Alle sechs geplanten Phasen sind in einer ersten, funktionsfähigen Version umge
    Anlage inkl. aller zugehörigen Prüfungen, Mängel, Dokumente und Sensor-Zuordnungen
    entfernen (mit Bestätigungsabfrage).
 2. Anlage anklicken → Sensoren zuordnen (Kennzahl + `entity_id`, z. B. `pv_yield_kwh` →
-   `sensor.pv_jahresertrag`) → Jahresvergleich über den Kennzahl-Link abrufbar.
+   `sensor.pv_jahresertrag`, plus **Summe** für kumulative Sensoren wie Energie/Ertrag oder
+   **Mittelwert** für Momentanwerte wie COP/Temperatur — falsch gewählt liefert der
+   Jahresvergleich keine Daten) → Jahresvergleich über den Kennzahl-Link abrufbar.
+   Voraussetzung ist, dass die zugeordnete Entity in Home Assistant überhaupt
+   Langzeitstatistiken führt (`state_class: measurement/total/total_increasing`); ist das
+   nicht der Fall, meldet das Panel das jetzt explizit statt einfach "keine Daten" zu zeigen.
 3. Prüfung starten, Checkliste/Messwerte erfassen, abschließen → nächster Prüftermin wird
    automatisch aus dem Prüfintervall berechnet; 30 Tage vorher erscheint eine
    Persistent Notification in Home Assistant.

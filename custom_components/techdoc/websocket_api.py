@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, PLANT_TYPE_METRICS
 from .db.engine import Database
+from .ha_bridge.statistics import async_available_statistic_ids
 from .metrics import async_yearly_totals
 from .reports import async_generate_annual_report, async_generate_inspection_report
 
@@ -204,6 +205,23 @@ async def ws_plant_metric_yearly(hass: HomeAssistant, connection, msg) -> None:
         connection.send_error(msg["id"], "no_mapping", "Kein Sensor für diese Kennzahl zugeordnet")
         return
 
+    if mapping.entity_id not in hass.states.async_entity_ids():
+        connection.send_error(
+            msg["id"], "entity_not_found", f"Entity {mapping.entity_id} existiert nicht in Home Assistant"
+        )
+        return
+
+    available_statistic_ids = await async_available_statistic_ids(hass)
+    if mapping.entity_id not in available_statistic_ids:
+        connection.send_error(
+            msg["id"],
+            "no_statistics",
+            f"Für {mapping.entity_id} liegen keine Langzeitstatistiken vor — dafür muss der Sensor "
+            "einen state_class-Attributwert (measurement/total/total_increasing) haben und seit "
+            "mindestens einer Stunde in Home Assistant laufen.",
+        )
+        return
+
     plant = await database.async_run(repo.get_plant, msg["plant_id"])
     first_year = msg.get("first_year") or (
         plant.year_built if plant and plant.year_built else dt_util.now().year
@@ -217,6 +235,7 @@ async def ws_plant_metric_yearly(hass: HomeAssistant, connection, msg) -> None:
         mapping.entity_id,
         mapping.unit,
         first_year,
+        aggregation=mapping.aggregation,
     )
     connection.send_result(msg["id"], {"totals": totals, "unit": mapping.unit})
 

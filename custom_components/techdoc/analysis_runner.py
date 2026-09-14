@@ -72,7 +72,14 @@ async def async_analyze_plant(hass: HomeAssistant, database: Database, plant_id:
             continue
 
         totals = await async_yearly_totals(
-            hass, database, plant_id, mapping.metric_key, mapping.entity_id, mapping.unit, first_year
+            hass,
+            database,
+            plant_id,
+            mapping.metric_key,
+            mapping.entity_id,
+            mapping.unit,
+            first_year,
+            aggregation=mapping.aggregation,
         )
         if current_year not in totals:
             continue

@@ -141,6 +141,7 @@ export class TechdocPlantDetail extends LitElement {
     await guarded(this, async () => {
       const metricKey = (form.elements.namedItem("metric_key") as HTMLInputElement).value.trim();
       const entityId = (form.elements.namedItem("entity_id") as HTMLInputElement).value.trim();
+      const aggregation = (form.elements.namedItem("aggregation") as HTMLSelectElement).value;
       if (!metricKey || !entityId) {
         throw new Error("Bitte Kennzahl und Entity-ID angeben.");
       }
@@ -150,7 +151,8 @@ export class TechdocPlantDetail extends LitElement {
         this.plant.id,
         metricKey,
         entityId,
-        catalogueEntry?.unit ?? undefined
+        catalogueEntry?.unit ?? undefined,
+        aggregation
       );
       form.reset();
       await this._load();
@@ -329,7 +331,7 @@ export class TechdocPlantDetail extends LitElement {
                     <a href="#" @click=${(e: Event) => { e.preventDefault(); this._handleShowYearly(m.metric_key); }}
                       >${m.metric_key}</a
                     >
-                    <span class="row-subtitle">${m.entity_id}</span>
+                    <span class="row-subtitle">${m.entity_id} · ${m.aggregation === "mean" ? "Mittelwert" : "Summe"}</span>
                   </div>
                   <button class="text" @click=${() => this._handleDeleteSensorMapping(m.id)}>Entfernen</button>
                 </div>
@@ -342,6 +344,10 @@ export class TechdocPlantDetail extends LitElement {
             ${options.map((m) => html`<option value=${m.key}>${m.name}</option>`)}
           </datalist>
           <input name="entity_id" placeholder="z. B. sensor.pv_jahresertrag" required />
+          <select name="aggregation" title="Wie wird der Sensor statistisch erfasst?">
+            <option value="sum">Summe (z. B. Energie, kWh)</option>
+            <option value="mean">Mittelwert (z. B. COP, Temperatur)</option>
+          </select>
           <button type="submit">Zuordnen</button>
         </form>
         ${this._renderYearlyTotals()}

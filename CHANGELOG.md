@@ -8,6 +8,28 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-14
+
+### Fixed
+
+- Sensor-mapped metrics were never actually retrieving data: the yearly
+  totals lookup always queried the recorder's cumulative ("sum"/"change")
+  statistics, regardless of a metric's real kind, and the panel never sent
+  the `aggregation` field it was mapped with either (it always defaulted
+  to "sum" server-side). Any metric that is actually a "mean"-class
+  statistic (COP, temperatures, ...) therefore always came back empty.
+  The panel's sensor-mapping form now lets you pick "Summe" or
+  "Mittelwert" explicitly, and that choice is sent and used to query the
+  matching statistic type.
+- The panel's error banner showed `[object Object]` for websocket errors
+  raised via `connection.send_error` (e.g. "no such mapping"), since
+  `hass.callWS` rejects with a plain `{code, message}` object, not a native
+  `Error` — `guarded()` now reads `.message` off both.
+- `techdoc/plant_metric_yearly` now checks upfront whether the mapped
+  entity exists and actually has Home Assistant long-term statistics at
+  all, returning a clear, specific error instead of silently reporting "no
+  data" when e.g. the entity has no `state_class` set.
+
 ## [0.3.0] - 2026-09-14
 
 ### Added

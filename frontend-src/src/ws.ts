@@ -100,7 +100,8 @@ export const upsertSensorMapping = (
   plantId: number,
   metricKey: string,
   entityId: string,
-  unit?: string
+  unit?: string,
+  aggregation?: string
 ): Promise<{ id: number }> =>
   hass.callWS({
     type: "techdoc/sensor_mapping_upsert",
@@ -108,6 +109,7 @@ export const upsertSensorMapping = (
     metric_key: metricKey,
     entity_id: entityId,
     unit,
+    aggregation,
   });
 
 export const deleteSensorMapping = (hass: HomeAssistant, mappingId: number): Promise<void> =>
