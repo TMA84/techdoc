@@ -42,6 +42,7 @@ await import(pathToFileURL(bundlePath).href);
 
 const fakeHass = {
   auth: { data: { access_token: "fake-token" } },
+  states: {},
   callWS: async (msg) => {
     switch (msg.type) {
       case "techdoc/plant_type_list":

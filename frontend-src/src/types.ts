@@ -1,12 +1,21 @@
+/** Trimmed-down equivalent of home-assistant-frontend's `HassEntity` — just
+ * the fields the panel actually reads (current value + its unit). */
+export interface HassEntity {
+  state: string;
+  attributes: Record<string, unknown> & { unit_of_measurement?: string };
+}
+
 /**
  * Minimal HomeAssistant frontend contract we actually rely on. Deliberately
  * not importing the full `home-assistant-frontend` types package here — it
- * is a large, HA-core-version-coupled dependency, and this panel only ever
- * touches `callWS` and the auth token for the raw-fetch upload endpoint.
+ * is a large, HA-core-version-coupled dependency. `states` gives read access
+ * to every entity's current value without an extra websocket round trip —
+ * the frontend already receives the full state dict from panel_custom.
  */
 export interface HomeAssistant {
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
   auth: { data: { access_token: string } };
+  states: Record<string, HassEntity | undefined>;
 }
 
 export interface PlantType {

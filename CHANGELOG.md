@@ -8,6 +8,29 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-14
+
+Ran a full end-to-end test directly against a real, complex production
+Home Assistant instance over the websocket API (create plant → map sensor
+→ fetch yearly totals → run an inspection → generate/download a report →
+clean up) to find actual usability gaps, rather than continuing to patch
+reactively based on bug reports alone.
+
+### Fixed
+
+- Sensor mapping showed no data anywhere unless the user happened to know
+  the plain-looking `metric_key` text was a clickable link to a hidden
+  "Jahresvergleich" popup — the mapping list now shows the entity's current
+  live value and its yearly comparison inline, automatically, for every
+  mapped metric (no click required); a metric with no statistics yet just
+  shows "keine Langzeitstatistik verfügbar" instead of nothing.
+- Widened `pv_yield_kwh`/`pv_self_consumption_kwh` hints
+  (`"generation"`/`"pv generation"` and `"direct energy consumption"` word
+  forms) after verifying against a real "SH"-integration PV/battery
+  inverter — the previous hint set matched none of its sensors
+  ("Total PV generation", "Daily direct energy consumption"), so it never
+  suggested a match despite obviously-correct sensors existing.
+
 ## [0.6.4] - 2026-09-14
 
 ### Fixed

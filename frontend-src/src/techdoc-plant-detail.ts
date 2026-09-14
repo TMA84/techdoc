@@ -54,8 +54,7 @@ export class TechdocPlantDetail extends LitElement {
   @state() private _sensorMappings: SensorMapping[] = [];
   @state() private _anomalies: Anomaly[] = [];
   @state() private _documents: DocumentRecord[] = [];
-  @state() private _yearlyTotals: YearlyTotalsResult | null = null;
-  @state() private _yearlyTotalsMetricKey: string | null = null;
+  @state() private _yearlyTotalsByMetric: Record<string, YearlyTotalsResult | null> = {};
   @state() private _devices: Device[] = [];
   @state() private _deviceEntities: DeviceEntity[] = [];
   @state() private _selectedDeviceId = "";
@@ -68,8 +67,7 @@ export class TechdocPlantDetail extends LitElement {
     if (changed.has("plant") && this.plant) {
       const previous = changed.get("plant") as Plant | undefined;
       if (!previous || previous.id !== this.plant.id) {
-        this._yearlyTotals = null;
-        this._yearlyTotalsMetricKey = null;
+        this._yearlyTotalsByMetric = {};
         this._selectedDeviceId = "";
         this._deviceEntities = [];
         this._suggestions = [];
@@ -95,6 +93,22 @@ export class TechdocPlantDetail extends LitElement {
     this._sensorMappings = sensorMappings;
     this._anomalies = anomalies;
     this._documents = documents;
+
+    // Fetch the yearly comparison for every mapped metric up front, instead
+    // of requiring a click per metric — mapping a sensor showed nothing at
+    // all otherwise unless you knew a plain-looking metric_key was secretly
+    // a link. A metric with no statistics yet (or an incompatible entity)
+    // just resolves to null and renders "keine Daten" for that row alone.
+    const yearlyEntries = await Promise.all(
+      sensorMappings.map(async (mapping) => {
+        try {
+          return [mapping.metric_key, await fetchPlantMetricYearly(this.hass, plantId, mapping.metric_key)] as const;
+        } catch {
+          return [mapping.metric_key, null] as const;
+        }
+      })
+    );
+    this._yearlyTotalsByMetric = Object.fromEntries(yearlyEntries);
   }
 
   private async _handleCreateInspection(event: SubmitEvent) {
@@ -219,13 +233,6 @@ export class TechdocPlantDetail extends LitElement {
     await guarded(this, async () => {
       await deleteSensorMapping(this.hass, id);
       await this._load();
-    });
-  }
-
-  private async _handleShowYearly(metricKey: string) {
-    await guarded(this, async () => {
-      this._yearlyTotalsMetricKey = metricKey;
-      this._yearlyTotals = await fetchPlantMetricYearly(this.hass, this.plant.id, metricKey);
     });
   }
 
@@ -374,25 +381,42 @@ export class TechdocPlantDetail extends LitElement {
     `;
   }
 
+  private _renderMappingRow(m: SensorMapping) {
+    const state = this.hass.states[m.entity_id];
+    const currentValue = state ? `${state.state} ${m.unit ?? state.attributes.unit_of_measurement ?? ""}` : "nicht verfügbar";
+    const yearly = this._yearlyTotalsByMetric[m.metric_key];
+    const years = yearly ? Object.keys(yearly.totals).sort().reverse() : [];
+
+    return html`
+      <div class="row" style="align-items: flex-start; flex-direction: column; gap: 4px;">
+        <div style="display: flex; justify-content: space-between; width: 100%;">
+          <div class="row-main">
+            <span class="row-title">${m.metric_key}</span>
+            <span class="row-subtitle"
+              >${m.entity_id} · ${m.aggregation === "mean" ? "Mittelwert" : "Summe"} · aktuell:
+              ${currentValue}</span
+            >
+          </div>
+          <button class="text" @click=${() => this._handleDeleteSensorMapping(m.id)}>Entfernen</button>
+        </div>
+        ${yearly === undefined
+          ? nothing
+          : yearly === null || !years.length
+            ? html`<div class="row-subtitle">Keine Langzeitstatistik verfügbar für diese Kennzahl.</div>`
+            : html`<div class="row-subtitle">
+                ${years.map((y) => `${y}: ${yearly.totals[y].toFixed(1)} ${yearly.unit ?? ""}`).join(" · ")}
+              </div>`}
+      </div>
+    `;
+  }
+
   private _renderMetrics() {
     const options = this._currentMetricOptions();
     return html`
       <div class="card">
         <h2>Kennzahlen &amp; Sensor-Zuordnung</h2>
         ${this._sensorMappings.length
-          ? this._sensorMappings.map(
-              (m) => html`
-                <div class="row">
-                  <div class="row-main">
-                    <a href="#" @click=${(e: Event) => { e.preventDefault(); this._handleShowYearly(m.metric_key); }}
-                      >${m.metric_key}</a
-                    >
-                    <span class="row-subtitle">${m.entity_id} · ${m.aggregation === "mean" ? "Mittelwert" : "Summe"}</span>
-                  </div>
-                  <button class="text" @click=${() => this._handleDeleteSensorMapping(m.id)}>Entfernen</button>
-                </div>
-              `
-            )
+          ? this._sensorMappings.map((m) => this._renderMappingRow(m))
           : html`<p class="empty">Noch keine Sensoren zugeordnet.</p>`}
         <h3>Gerät wählen</h3>
         <select class="inline" @change=${this._handleDeviceChange} .value=${this._selectedDeviceId}>
@@ -441,27 +465,7 @@ export class TechdocPlantDetail extends LitElement {
         <p class="row-subtitle">
           Summe/Mittelwert wird automatisch aus dem state_class-Attribut des gewählten Sensors erkannt.
         </p>
-        ${this._renderYearlyTotals()}
       </div>
-    `;
-  }
-
-  private _renderYearlyTotals() {
-    if (!this._yearlyTotals) return nothing;
-    const years = Object.keys(this._yearlyTotals.totals).sort();
-    if (!years.length) {
-      return html`<p class="empty">Keine Daten für ${this._yearlyTotalsMetricKey} verfügbar.</p>`;
-    }
-    return html`
-      <h3>Jahresvergleich: ${this._yearlyTotalsMetricKey}</h3>
-      ${years.map(
-        (y) => html`
-          <div class="row">
-            <span>${y}</span>
-            <span>${this._yearlyTotals!.totals[y].toFixed(1)} ${this._yearlyTotals!.unit ?? ""}</span>
-          </div>
-        `
-      )}
     `;
   }
 

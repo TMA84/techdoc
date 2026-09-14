@@ -65,8 +65,9 @@ Alle sechs geplanten Phasen sind in einer ersten, funktionsfähigen Version umge
    Vorschlag, den man ablehnen/überschreiben kann. Voraussetzung ist, dass die Entity in
    Home Assistant überhaupt Langzeitstatistiken führt
    (`state_class: measurement/total/total_increasing`); ist das nicht der Fall, meldet das
-   Panel das explizit statt einfach "keine Daten" zu zeigen. Danach ist der
-   Jahresvergleich über den Kennzahl-Link abrufbar.
+   Panel das explizit statt einfach "keine Daten" zu zeigen. Aktueller Live-Wert und
+   Jahresvergleich werden danach direkt in der Zuordnungsliste angezeigt — ohne
+   weiteren Klick.
 3. Prüfung starten, Checkliste/Messwerte erfassen, abschließen → nächster Prüftermin wird
    automatisch aus dem Prüfintervall berechnet; 30 Tage vorher erscheint eine
    Persistent Notification in Home Assistant.
