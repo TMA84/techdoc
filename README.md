@@ -122,3 +122,28 @@ mit abgedeckt; kein separater Backup-Mechanismus nötig.
 - **Erinnerungen erscheinen nicht**: Erinnerungen laufen über eine persistente
   Home-Assistant-Benachrichtigung (`persistent_notification`), die bei jedem
   Coordinator-Lauf aktualisiert wird — erst nach dem ersten Lauf sichtbar.
+
+## Versionierung & Releases
+
+TechDoc folgt [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+Solange die Version `0.x.y` ist, können auch Minor-Releases (`0.1.0` → `0.2.0`)
+noch breaking changes enthalten; ab `1.0.0` gilt SemVer strikt.
+
+- Die aktuelle Version steht in `custom_components/techdoc/manifest.json`
+  (Feld `version`) — das ist die für HACS/Home Assistant maßgebliche Quelle.
+- Jede Version wird in [CHANGELOG.md](CHANGELOG.md) dokumentiert.
+- Jeder Release bekommt einen Git-Tag (`vMAJOR.MINOR.PATCH`, z. B. `v0.1.0`)
+  sowie ein zugehöriges GitHub-Release — das ist die Voraussetzung dafür, dass
+  HACS die Version als installierbar erkennt.
+
+**Ablauf für einen neuen Release:**
+
+1. `manifest.json`-Version anheben.
+2. Neuen Abschnitt in `CHANGELOG.md` ergänzen (unter `[Unreleased]` einsortieren,
+   dann beim Release umbenennen in `[MAJOR.MINOR.PATCH] - YYYY-MM-DD`).
+3. Commit, Tag (`git tag -a vX.Y.Z -m "..."`), Push von Commit und Tag.
+4. GitHub-Release aus dem Tag erstellen (z. B. `gh release create vX.Y.Z`).
+
+## Lizenz
+
+[MIT](LICENSE) — Copyright (c) 2026 Tobias Malcherek.
