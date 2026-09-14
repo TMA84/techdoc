@@ -1,0 +1,12 @@
+{
+  "domain": "techdoc",
+  "name": "TechDoc",
+  "codeowners": ["@tmalcherek"],
+  "config_flow": true,
+  "documentation": "https://github.com/tmalcherek/techdoc",
+  "issue_tracker": "https://github.com/tmalcherek/techdoc/issues",
+  "iot_class": "calculated",
+  "requirements": ["reportlab==5.0.1"],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}

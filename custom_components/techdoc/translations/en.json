@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up TechDoc",
+        "description": "Creates the local database for TechDoc (building technology inspection log). Plants, inspections and checklists are then managed in the TechDoc panel in the sidebar."
+      }
+    },
+    "abort": {
+      "already_configured": "The integration is already configured."
+    }
+  }
+}

@@ -1,0 +1,111 @@
+run_analysis:
+  name: Analyse jetzt ausführen
+  description: >-
+    Stößt eine sofortige Neuberechnung der Haustechnik-Kennzahlen an, anstatt
+    auf das nächste geplante Intervall zu warten.
+
+start:
+  name: Prüfung starten
+  description: Legt eine neue Prüfung für eine Anlage an, optional auf Basis einer Checklisten-Vorlage.
+  fields:
+    plant_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    checklist_template_id:
+      selector:
+        number:
+          min: 1
+          mode: box
+    type:
+      example: Jahresprüfung
+      selector:
+        text:
+    inspector:
+      selector:
+        text:
+    date:
+      selector:
+        date:
+
+complete:
+  name: Prüfung abschließen
+  description: Schließt eine Prüfung ab und berechnet den nächsten Prüftermin.
+  fields:
+    inspection_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    next_due_date:
+      selector:
+        date:
+
+add_finding:
+  name: Mangel erfassen
+  description: Erfasst einen neuen Mangel für eine Anlage.
+  fields:
+    plant_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    description:
+      required: true
+      selector:
+        text:
+    category:
+      selector:
+        text:
+    priority:
+      selector:
+        select:
+          options:
+            - niedrig
+            - mittel
+            - hoch
+            - kritisch
+    due_date:
+      selector:
+        date:
+    inspection_id:
+      selector:
+        number:
+          min: 1
+          mode: box
+
+generate_report:
+  name: Bericht erzeugen
+  description: >-
+    Erzeugt einen PDF-Prüfbericht (inspection_id) oder einen
+    Haustechnik-Jahresbericht (year) und legt ihn als Dokument ab.
+  fields:
+    inspection_id:
+      selector:
+        number:
+          min: 1
+          mode: box
+    year:
+      selector:
+        number:
+          min: 2000
+          max: 2100
+          mode: box
+
+close_finding:
+  name: Mangel schließen
+  description: Markiert einen Mangel als erledigt.
+  fields:
+    finding_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    comment:
+      selector:
+        text:

@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TechDoc einrichten",
+        "description": "Legt die lokale Datenbank für TechDoc (Haustechnik-Prüfdokumentation) an. Anlagen, Prüfungen und Checklisten werden anschließend im TechDoc-Panel in der Seitenleiste verwaltet."
+      }
+    },
+    "abort": {
+      "already_configured": "Die Integration ist bereits eingerichtet."
+    }
+  }
+}
