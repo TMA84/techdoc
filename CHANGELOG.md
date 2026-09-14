@@ -8,6 +8,30 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-14
+
+### Added
+
+- Sidebar panel rewritten in Lit + TypeScript (`frontend-src/`, bundled with
+  esbuild to a single ES module), replacing the vanilla-JS/no-build panel:
+  card-based layout using Home Assistant's own theme CSS custom properties,
+  colored status/severity badges, and a visible error banner so a failed
+  action (validation error, backend exception) is never silently swallowed.
+- `frontend-src/smoke-test.mjs`: jsdom-based runtime smoke test that mounts
+  `<techdoc-panel>` with a fake `hass` and asserts it registers and renders
+  both tabs; wired up as `npm run verify` (typecheck + build + smoke).
+
+### Fixed
+
+- `techdoc/inspection_create` websocket command: the schema declared both
+  the command discriminator and the inspection's own "type" (Prüfungsart)
+  field as `"type"`. A JSON object can only have one key with that name, so
+  the discriminator was getting silently overwritten — this broke command
+  routing for that call. The inspection-type field is now sent as
+  `inspection_type` on the wire (mapped to the same `type` DB column
+  server-side); the old vanilla-JS panel had the same bug (TypeScript's
+  duplicate-object-key check caught it during the rewrite).
+
 ## [0.1.0] - 2026-09-14
 
 Initial release. Implements all six planned phases in a first working version:

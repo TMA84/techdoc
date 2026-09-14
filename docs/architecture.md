@@ -84,8 +84,9 @@ custom_components/techdoc/
 ├── sensor.py, binary_sensor.py
 ├── services.py, services.yaml
 ├── strings.json, translations/de.json, translations/en.json
-└── panel/                    # Sidebar-Panel (Frontend)
+└── panel/techdoc-panel.js    # gebündeltes Panel (Build-Output, siehe frontend-src/)
 
+frontend-src/                  # Lit/TypeScript-Quelle des Panels, baut nach panel/ (s. Abschnitt 6)
 tests/unit/                   # HA-unabhängige Tests (Repository, Analyse-Statistik)
 tests/integration/            # pytest-homeassistant-custom-component (spätere Phasen)
 docs/architecture.md           # dieses Dokument
@@ -130,10 +131,30 @@ ergänzt, ohne bestehenden Code zu ändern.
 
 ## 6. UI-Konzept
 
-Sidebar-Panel "TechDoc": Dashboard, Anlagen, Prüfungen, Mängel, Anomalien,
-Analysen, Dokumente, Einstellungen. Details siehe Projektbeschreibung. Mobil
-optimiert für Prüfdurchführung, lokaler Draft-State gegen Datenverlust bei
-Verbindungsabbruch.
+Sidebar-Panel "TechDoc", umgesetzt in **Lit + TypeScript** (Quelle in
+`frontend-src/`, Build via esbuild zu einem einzelnen ES-Modul-Bundle unter
+`custom_components/techdoc/panel/techdoc-panel.js`):
+
+- `techdoc-panel` (Root): globale Statistik-Kacheln (Anlagen/offene Mängel/
+  offene Anomalien), Tab-Navigation, hält Overview-State (Anlagen, Anlagentypen,
+  Mängel, Anomalien, Kennzahlen-Katalog), zeigt Fehler-Banner bei fehlgeschlagenen
+  Aktionen statt sie stillschweigend zu verschlucken.
+- `techdoc-plant-list`: Anlagenliste + "Anlage anlegen"-Formular.
+- `techdoc-plant-detail`: Prüfungen, Mängel, Kennzahlen/Sensor-Zuordnung
+  (inkl. Jahresvergleich), Anomalien, Dokumente der ausgewählten Anlage.
+- `techdoc-findings-overview`: anlagenübergreifende Mängel-Übersicht.
+- `techdoc-status-badge`: farbige Status-/Schweregrad-Pille.
+- Styling nutzt Home-Assistants eigene CSS-Custom-Properties (Karten,
+  Farben, Typografie folgen dem aktiven Theme) statt HA-Frontend-Komponenten
+  zu importieren — bleibt dadurch ein kleines, abhängigkeitsarmes Bundle.
+- Jede mutierende Aktion läuft über `guarded()` (`frontend-src/src/errors.ts`):
+  Fehler werden als sichtbares Banner angezeigt statt zu verschwinden.
+
+Aktuell zwei Tabs (Anlagen inkl. Detailansicht, Mängel) statt der vollen
+Tab-Struktur aus der Projektbeschreibung (Dashboard/Analysen/Dokumente/
+Einstellungen als eigene Views) — siehe "Bekannte Einschränkungen" in der
+README. Mobile-Feinschliff und lokaler Draft-State gegen Datenverlust bei
+Verbindungsabbruch stehen noch aus.
 
 ## 7. Entwicklungsplan
 
@@ -144,4 +165,4 @@ Verbindungsabbruch.
 | 3 – HA-Daten | Sensor-Mapping-UI, Statistics-/History-Anbindung, Jahresertragsberechnung, Kennzahlen je Anlagentyp | echte HA-Sensordaten im Anlagen-Detail sichtbar | **fertig** |
 | 4 – Analyse | Plausibilitäts-Engine, Anomalieerkennung, Konfidenz/Schweregrad, Basis-Datenqualitätsprüfung | Anomalie mit Erklärung + Konfidenz im Dashboard | **fertig** (Datenqualität bisher nur "Sensor nicht verfügbar"; Dauer-Null/Einheitswechsel/Lücken offen) |
 | 5 – Reporting | Prüfbericht-PDF, Jahresbericht | PDF-Export funktionsfähig | **fertig** |
-| 6 – Optimierung | Performance, Mobile-Feinschliff, Tests, README | CI-grüne Testsuite, vollständige Doku | **teilweise**: README fertig, Performance-Grundprinzipien (Caching, Executor-Jobs) von Anfang an eingehalten, umfassende Unit-Testsuite (siehe unten) — Mobile-Feinschliff und echte HA-Integrationstests mit `pytest-homeassistant-custom-component` stehen noch aus |
+| 6 – Optimierung | Performance, Mobile-Feinschliff, Tests, README | CI-grüne Testsuite, vollständige Doku | **teilweise**: README fertig, Performance-Grundprinzipien (Caching, Executor-Jobs) von Anfang an eingehalten, umfassende Unit-Testsuite (siehe unten), Panel als Lit/TypeScript-Rewrite mit Build-Pipeline + jsdom-Smoke-Test umgesetzt — Mobile-Feinschliff und echte HA-Integrationstests mit `pytest-homeassistant-custom-component` stehen noch aus |

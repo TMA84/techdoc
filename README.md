@@ -17,13 +17,16 @@ Alle sechs geplanten Phasen sind in einer ersten, funktionsfähigen Version umge
 - **HA-Anbindung**: Sensor-Zuordnung je Kennzahl, Jahresvergleich über `recorder.statistics` (keine Datenduplizierung, Cache für abgeschlossene Jahre)
 - **Analyse**: konfigurierbare Plausibilitätsregeln, robuste Anomalieerkennung (Median/MAD/modifizierter Z-Score), Konfidenz- und Schweregrad-Berechnung, Basis-Datenqualitätsprüfung ("Sensor nicht verfügbar")
 - **Reporting**: Prüfbericht- und Jahresbericht-PDF (ReportLab), abgelegt als Dokument
-- **Sidebar-Panel** (Vanilla-JS-Webcomponent): Anlagen, Prüfungen, Mängel, Anomalien, Kennzahlen/Sensor-Zuordnung, Dokumente, Berichte
+- **Sidebar-Panel** (Lit/TypeScript, siehe [`frontend-src/`](frontend-src/)): Anlagen (mit Detailansicht:
+  Prüfungen, Mängel, Anomalien, Kennzahlen/Sensor-Zuordnung, Dokumente, Berichte) und eine
+  anlagenübergreifende Mängel-Übersicht; kartenbasiertes Layout im Home-Assistant-Theme, sichtbare
+  Fehlermeldungen statt stiller Fehlschläge
 
 ### Bekannte Einschränkungen (nächste Schritte)
 
-- Das Panel ist ein einzelnes, handgeschriebenes Web-Component (kein Lit/Build-Schritt) mit zwei Tabs
-  (Anlagen inkl. Detailansicht, Mängel) statt der vollen, separaten Tab-Struktur aus Abschnitt 41
-  der Spezifikation (Dashboard/Analysen/Dokumente/Einstellungen als eigene Views).
+- Das Panel hat zwei Tabs (Anlagen inkl. Detailansicht, Mängel) statt der vollen, separaten
+  Tab-Struktur aus Abschnitt 41 der Spezifikation (Dashboard/Analysen/Dokumente/Einstellungen
+  als eigene Views).
 - Datenqualitätsprüfung deckt bisher nur "Sensor nicht verfügbar" ab; Dauer-Null-Werte,
   Einheitswechsel und Datenlücken sind noch nicht implementiert.
 - Ein erkannter Anomalie-Status (bestätigt/nicht relevant) wird beim nächsten Analyse-Lauf
@@ -103,6 +106,22 @@ PYTHONPATH=. .venv/bin/python -c "import custom_components.techdoc"
 
 Echte Home-Assistant-Integrationstests (Config Flow, Coordinator, Sensor-Entities)
 mit `pytest-homeassistant-custom-component` sind als nächster Schritt vorgesehen.
+
+### Frontend (Panel)
+
+Das Panel ist in TypeScript/Lit geschrieben (Quelle: [`frontend-src/`](frontend-src/)) und
+wird zu einem einzelnen, gebündelten ES-Modul kompiliert, das direkt unter
+`custom_components/techdoc/panel/techdoc-panel.js` liegt und mit ausgeliefert wird —
+`frontend-src/` selbst ist nicht Teil der Integration, nur der Build-Output.
+
+```bash
+cd frontend-src
+npm install
+npm run verify   # typecheck + build + jsdom-Smoke-Test (mountet <techdoc-panel> mit Fake-hass)
+```
+
+Nach jeder Änderung an `frontend-src/src/**` muss `npm run build` (oder `npm run verify`)
+laufen und der aktualisierte `panel/techdoc-panel.js` mit committet werden.
 
 ## Backup
 

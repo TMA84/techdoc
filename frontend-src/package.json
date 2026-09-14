@@ -1,0 +1,22 @@
+{
+  "name": "techdoc-panel-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Lit/TypeScript source for the TechDoc Home Assistant sidebar panel. Builds to ../custom_components/techdoc/panel/techdoc-panel.js.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node smoke-test.mjs",
+    "verify": "npm run typecheck && npm run build && npm run smoke"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "jsdom": "^25.0.0",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "lit": "^3.2.0"
+  }
+}

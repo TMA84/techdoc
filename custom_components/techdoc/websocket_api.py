@@ -353,7 +353,10 @@ async def ws_inspection_get(hass: HomeAssistant, connection, msg) -> None:
         vol.Required("type"): "techdoc/inspection_create",
         vol.Required("plant_id"): int,
         vol.Required("date"): str,
-        vol.Optional("type"): str,
+        # Named "inspection_type" on the wire (not "type") because a
+        # websocket message can only have one "type" key — that key is
+        # already the command discriminator required by websocket_api.
+        vol.Optional("inspection_type"): str,
         vol.Optional("inspector"): str,
         vol.Optional("checklist_template_id"): int,
     }
@@ -361,9 +364,12 @@ async def ws_inspection_get(hass: HomeAssistant, connection, msg) -> None:
 @websocket_api.async_response
 async def ws_inspection_create(hass: HomeAssistant, connection, msg) -> None:
     database = _get_database(hass)
-    extra_fields = {
-        key: msg[key] for key in ("type", "inspector", "checklist_template_id") if key in msg
-    }
+    extra_fields = {}
+    if "inspection_type" in msg:
+        extra_fields["type"] = msg["inspection_type"]
+    for key in ("inspector", "checklist_template_id"):
+        if key in msg:
+            extra_fields[key] = msg[key]
     inspection_id = await database.async_run(
         database.repository.create_inspection, msg["plant_id"], msg["date"], **extra_fields
     )

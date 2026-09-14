@@ -1,5 +1,6 @@
 .cockpit/
 __pycache__/
+node_modules/
 *.pyc
 .venv/
 venv/
