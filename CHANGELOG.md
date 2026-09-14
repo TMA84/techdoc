@@ -8,6 +8,25 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-09-14
+
+### Fixed
+
+- Widened the `PLANT_TYPE_METRICS` hint vocabulary in `const.py` after
+  validating the matcher against a real, complex production Home Assistant
+  instance (multiple heat pump, PV inverter, wallbox, and battery
+  integrations). The strict phrase-match gate added in 0.6.1 was correct in
+  principle but too narrow in practice: real entities frequently use a
+  different word form than the hint (e.g. a heat pump reporting "Wärme
+  Heizung"/"COP Heizung" — noun form — where the catalogue only had
+  "wärmemenge heizen"/"cop heizen" — verb form), so no suggestion appeared
+  at all despite an unambiguous sensor existing. Heat pump, PV, wallbox, and
+  battery hints now cover both word forms and common English/German
+  synonyms actually seen in the wild (Luxtronik-style, GoSungrow, evcc).
+  Manually verified: all 6 real heat-pump metrics with a corresponding
+  sensor, all 4 PV metrics, and the wallbox/battery charge metrics now
+  match correctly with no false positives introduced.
+
 ## [0.6.1] - 2026-09-14
 
 ### Fixed
