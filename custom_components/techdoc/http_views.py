@@ -6,6 +6,8 @@ through the database by document id first.
 """
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
@@ -105,7 +107,27 @@ class DocumentDownloadView(HomeAssistantView):
         path = runtime.document_storage.resolve_path(document.filename)
         content = await self._hass.async_add_executor_job(path.read_bytes)
         content_type = _CONTENT_TYPES.get(path.suffix, "application/octet-stream")
-        return web.Response(body=content, content_type=content_type)
+
+        # Explicit "inline" (rather than leaving Content-Disposition unset)
+        # so browsers reliably render PDFs/images in the tab instead of
+        # prompting a download, with a human-readable filename derived from
+        # the document type instead of the content-hash-based stored
+        # filename. document.type is free-form user input (may contain
+        # umlauts/non-ASCII), so it needs both a plain ASCII fallback and an
+        # RFC 6266 filename* for the correct display name in browsers that
+        # honor it.
+        display_name = f"{document.type}{path.suffix}".replace("/", "_").replace('"', "")
+        ascii_fallback = display_name.encode("ascii", "ignore").decode("ascii") or f"dokument{path.suffix}"
+        encoded_name = quote(display_name)
+        return web.Response(
+            body=content,
+            content_type=content_type,
+            headers={
+                "Content-Disposition": (
+                    f'inline; filename="{ascii_fallback}"; filename*=UTF-8\'\'{encoded_name}'
+                )
+            },
+        )
 
 
 def async_register_http_views(hass: HomeAssistant) -> None:

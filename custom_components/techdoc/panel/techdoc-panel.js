@@ -366,7 +366,7 @@ var te=Object.defineProperty;var ee=Object.getOwnPropertyDescriptor;var l=(i,e,t
             <span>${this._yearlyTotals.totals[s].toFixed(1)} ${this._yearlyTotals.unit??""}</span>
           </div>
         `)}
-    `:o`<p class="empty">Keine Daten für ${this._yearlyTotalsMetricKey} verfügbar.</p>`}async _handleOpenDocument(t,s){t.preventDefault(),await g(this,async()=>{let{path:n}=await tt(this.hass,`/api/techdoc/documents/${s}`);window.open(n,"_blank")})}_renderDocuments(){return o`
+    `:o`<p class="empty">Keine Daten für ${this._yearlyTotalsMetricKey} verfügbar.</p>`}async _handleOpenDocument(t,s){t.preventDefault();let n=window.open("","_blank");await g(this,async()=>{let{path:r}=await tt(this.hass,`/api/techdoc/documents/${s}`);n?n.location.href=r:window.open(r,"_blank")})}_renderDocuments(){return o`
       <div class="card">
         <h2>Dokumente</h2>
         ${this._documents.length?this._documents.map(t=>o`

@@ -467,9 +467,18 @@ export class TechdocPlantDetail extends LitElement {
 
   private async _handleOpenDocument(event: Event, documentId: number) {
     event.preventDefault();
+    // Open the tab synchronously, in direct response to the click, then
+    // navigate it once the signed URL comes back — window.open() called
+    // only after an await has no user-gesture context left and browsers
+    // silently block it as a popup.
+    const newTab = window.open("", "_blank");
     await guarded(this, async () => {
       const { path } = await signPath(this.hass, `/api/techdoc/documents/${documentId}`);
-      window.open(path, "_blank");
+      if (newTab) {
+        newTab.location.href = path;
+      } else {
+        window.open(path, "_blank");
+      }
     });
   }
 

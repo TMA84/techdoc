@@ -8,6 +8,20 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-09-14
+
+### Fixed
+
+- Documents/reports opened as a forced download instead of viewing inline
+  in the browser, and could silently fail to open at all: `DocumentDownloadView`
+  now sends an explicit `Content-Disposition: inline` (with a human-readable
+  filename derived from the document type, RFC 6266-encoded for
+  umlauts/non-ASCII) instead of leaving the header unset, and the panel now
+  opens the new tab synchronously on click, only navigating it once the
+  signed URL comes back — doing `window.open()` after an `await` has no
+  user-gesture context left, so browsers were silently blocking it as a
+  popup.
+
 ## [0.6.3] - 2026-09-14
 
 ### Fixed
