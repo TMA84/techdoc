@@ -17,6 +17,7 @@ import {
   fetchPlantMetricYearly,
   fetchSensorMappings,
   generateInspectionReport,
+  signPath,
   updateAnomalyStatus,
   uploadDocument,
   upsertSensorMapping,
@@ -464,6 +465,14 @@ export class TechdocPlantDetail extends LitElement {
     `;
   }
 
+  private async _handleOpenDocument(event: Event, documentId: number) {
+    event.preventDefault();
+    await guarded(this, async () => {
+      const { path } = await signPath(this.hass, `/api/techdoc/documents/${documentId}`);
+      window.open(path, "_blank");
+    });
+  }
+
   private _renderDocuments() {
     return html`
       <div class="card">
@@ -472,7 +481,9 @@ export class TechdocPlantDetail extends LitElement {
           ? this._documents.map(
               (d) => html`
                 <div class="row">
-                  <a href="/api/techdoc/documents/${d.id}" target="_blank">${d.type}: ${d.filename}</a>
+                  <a href="#" @click=${(e: Event) => this._handleOpenDocument(e, d.id)}
+                    >${d.type}: ${d.filename}</a
+                  >
                 </div>
               `
             )

@@ -1,7 +1,9 @@
 /**
  * Typed wrappers around the techdoc websocket API (see
  * custom_components/techdoc/websocket_api.py — command names and payload
- * shapes must stay in sync with that file).
+ * shapes must stay in sync with that file), plus Home Assistant's own
+ * built-in `auth/sign_path` command (registered by core's `auth`
+ * component) used to make document download links work.
  */
 import type {
   Anomaly,
@@ -150,6 +152,20 @@ export const updateAnomalyStatus = (
 
 export const fetchDocuments = (hass: HomeAssistant, plantId: number): Promise<DocumentRecord[]> =>
   hass.callWS({ type: "techdoc/document_list", plant_id: plantId });
+
+/**
+ * A plain `<a href="/api/techdoc/documents/…">` never gets the browser to
+ * send the Authorization header, so a bare link always 401s — Home
+ * Assistant's own frontend solves this the same way (e.g. for camera/media
+ * downloads): sign the path via the core `auth/sign_path` websocket
+ * command, which embeds a short-lived `authSig` query token HA's auth
+ * middleware accepts in place of the header.
+ */
+export const signPath = (
+  hass: HomeAssistant,
+  path: string,
+  expiresSeconds = 300
+): Promise<{ path: string }> => hass.callWS({ type: "auth/sign_path", path, expires: expiresSeconds });
 
 export const generateInspectionReport = (
   hass: HomeAssistant,

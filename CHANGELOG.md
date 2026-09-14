@@ -8,6 +8,19 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-09-14
+
+### Fixed
+
+- Document/report download links always returned 401: a plain
+  `<a href="/api/techdoc/documents/…">` has no way to carry the
+  Authorization header a browser normally attaches for `hass.callWS`/
+  `fetch` calls, so the request hit `DocumentDownloadView`'s `requires_auth`
+  check with no credentials. Links now request a short-lived signed URL via
+  Home Assistant's own built-in `auth/sign_path` websocket command (the
+  same mechanism HA's frontend uses for camera/media downloads) before
+  opening, instead of using the raw API path directly.
+
 ## [0.6.2] - 2026-09-14
 
 ### Fixed

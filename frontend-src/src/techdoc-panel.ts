@@ -9,6 +9,7 @@ import {
   fetchPlantTypes,
   fetchPlants,
   generateAnnualReport,
+  signPath,
 } from "./ws";
 import type { Anomaly, Finding, HomeAssistant, MetricCatalogue, Plant, PlantType } from "./types";
 import "./techdoc-plant-list";
@@ -29,7 +30,7 @@ export class TechdocPanel extends LitElement {
   @state() private _anomalies: Anomaly[] = [];
   @state() private _metricCatalogue: MetricCatalogue = {};
   @state() private _selectedPlantId: number | null = null;
-  @state() private _lastAnnualReportDocumentId: number | null = null;
+  @state() private _lastAnnualReportUrl: string | null = null;
   @state() private _loaded = false;
   @state() private _errorMessage: string | null = null;
 
@@ -68,7 +69,8 @@ export class TechdocPanel extends LitElement {
   private async _handleGenerateAnnualReport() {
     await guarded(this, async () => {
       const result = await generateAnnualReport(this.hass, new Date().getFullYear());
-      this._lastAnnualReportDocumentId = result.document_id;
+      const signed = await signPath(this.hass, `/api/techdoc/documents/${result.document_id}`);
+      this._lastAnnualReportUrl = signed.path;
     });
   }
 
@@ -135,11 +137,9 @@ export class TechdocPanel extends LitElement {
         <button class="secondary" @click=${this._handleGenerateAnnualReport}>
           Jahresbericht ${new Date().getFullYear()} erzeugen
         </button>
-        ${this._lastAnnualReportDocumentId
+        ${this._lastAnnualReportUrl
           ? html`<p>
-              <a href="/api/techdoc/documents/${this._lastAnnualReportDocumentId}" target="_blank">
-                Jahresbericht herunterladen
-              </a>
+              <a href=${this._lastAnnualReportUrl} target="_blank"> Jahresbericht herunterladen </a>
             </p>`
           : nothing}
       </div>
