@@ -58,30 +58,113 @@ PLANT_TYPE_METRICS: dict[str, list[dict]] = {
             "hints": ["netzbezug", "bezug", "import", "grid consumption"],
         },
     ],
+    # Many heat pumps report separate sensors per operating mode (Heizen /
+    # Raumheizung vs. Warmwasser / Brauchwasser) rather than one combined
+    # total — both the "_heating_"/"_hotwater_" split metrics and the plain
+    # combined ones are offered, since which exist depends on the specific
+    # heat pump integration. The combined metrics' hints lean toward
+    # "gesamt"/"total" wording so they don't grab one of the two split
+    # sensors when a device exposes all three.
     "heatpump": [
         {
             "key": "heatpump_power_kwh",
-            "name": "Stromverbrauch",
+            "name": "Stromverbrauch (gesamt)",
             "unit": "kWh",
             "kind": "sum",
             "device_classes": ["energy"],
-            "hints": ["stromverbrauch", "power consumption", "electrical energy", "verbrauch"],
+            "hints": ["gesamtverbrauch", "stromverbrauch gesamt", "total power consumption"],
+        },
+        {
+            "key": "heatpump_power_heating_kwh",
+            "name": "Stromverbrauch Heizen",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": [
+                "stromverbrauch heizen",
+                "strom heizen",
+                "heizstrom",
+                "power heating",
+                "electrical energy heating",
+            ],
+        },
+        {
+            "key": "heatpump_power_hotwater_kwh",
+            "name": "Stromverbrauch Warmwasser",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": [
+                "stromverbrauch warmwasser",
+                "strom warmwasser",
+                "brauchwasserstrom",
+                "power hot water",
+                "electrical energy hot water",
+                "electrical energy dhw",
+            ],
         },
         {
             "key": "heatpump_heat_kwh",
-            "name": "Wärmeerzeugung",
+            "name": "Wärmeerzeugung (gesamt)",
             "unit": "kWh",
             "kind": "sum",
             "device_classes": ["energy"],
-            "hints": ["wärme", "waerme", "heat", "thermal energy", "wärmemenge", "waermemenge"],
+            "hints": ["wärmemenge gesamt", "waermemenge gesamt", "total thermal energy"],
+        },
+        {
+            "key": "heatpump_heat_heating_kwh",
+            "name": "Wärmeerzeugung Heizen",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": [
+                "wärmemenge heizen",
+                "waermemenge heizen",
+                "wärmeerzeugung heizen",
+                "heizwärme",
+                "heizwaerme",
+                "heat output heating",
+                "thermal energy heating",
+            ],
+        },
+        {
+            "key": "heatpump_heat_hotwater_kwh",
+            "name": "Wärmeerzeugung Warmwasser",
+            "unit": "kWh",
+            "kind": "sum",
+            "device_classes": ["energy"],
+            "hints": [
+                "wärmemenge warmwasser",
+                "waermemenge warmwasser",
+                "wärmeerzeugung warmwasser",
+                "heat output hot water",
+                "thermal energy hot water",
+                "thermal energy dhw",
+            ],
         },
         {
             "key": "heatpump_cop",
-            "name": "COP",
+            "name": "COP (gesamt)",
             "unit": None,
             "kind": "mean",
             "device_classes": [],
-            "hints": ["cop", "leistungszahl", "coefficient of performance"],
+            "hints": ["cop gesamt", "jaz gesamt", "coefficient of performance"],
+        },
+        {
+            "key": "heatpump_cop_heating",
+            "name": "COP Heizen",
+            "unit": None,
+            "kind": "mean",
+            "device_classes": [],
+            "hints": ["cop heizen", "jaz heizen", "leistungszahl heizen", "heating cop"],
+        },
+        {
+            "key": "heatpump_cop_hotwater",
+            "name": "COP Warmwasser",
+            "unit": None,
+            "kind": "mean",
+            "device_classes": [],
+            "hints": ["cop warmwasser", "jaz warmwasser", "leistungszahl warmwasser", "hot water cop", "dhw cop"],
         },
         {
             "key": "heatpump_flow_temp",
@@ -143,6 +226,10 @@ DEFAULT_PLAUSIBILITY_RULES: dict[str, list[dict]] = {
     "heatpump": [
         {"metric_key": "heatpump_cop", "operator": "lt", "threshold_value": 2.0, "severity": "hoch"},
         {"metric_key": "heatpump_cop", "operator": "gt", "threshold_value": 7.0, "severity": "niedrig"},
+        {"metric_key": "heatpump_cop_heating", "operator": "lt", "threshold_value": 2.0, "severity": "hoch"},
+        {"metric_key": "heatpump_cop_heating", "operator": "gt", "threshold_value": 7.0, "severity": "niedrig"},
+        {"metric_key": "heatpump_cop_hotwater", "operator": "lt", "threshold_value": 1.5, "severity": "hoch"},
+        {"metric_key": "heatpump_cop_hotwater", "operator": "gt", "threshold_value": 5.0, "severity": "niedrig"},
     ],
     "wallbox": [
         {"metric_key": "wallbox_energy_kwh", "operator": "lt", "threshold_value": 0, "severity": "mittel"},

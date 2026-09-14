@@ -91,8 +91,15 @@ Alle sechs geplanten Phasen sind in einer ersten, funktionsfähigen Version umge
 Anlagentypen werden vom Benutzer im Panel angelegt (`plant_type_create`-Pfad über
 `create_plant_type` in `db/repository.py`) — keine Codeänderung nötig. Eine neue
 Kennzahl ist einfach ein neuer `metric_key`-String in einem Sensor-Mapping; für
-UI-Vorschläge kann `const.py`s `PLANT_TYPE_METRICS` erweitert werden. Ein eigener
-Analyzer mit anlagenspezifischer Logik kommt als neue Datei unter `analysis/plugins/`
+UI-Vorschläge und automatische Zuordnungsvorschläge kann `const.py`s
+`PLANT_TYPE_METRICS` erweitert werden (`hints`/`device_classes` je Eintrag steuern,
+wonach `ha_bridge/matching.py` beim Vorschlagen sucht). Für Wärmepumpen sind z. B.
+sowohl kombinierte (`heatpump_power_kwh`, `heatpump_heat_kwh`, `heatpump_cop`) als
+auch nach Heizen/Warmwasser getrennte Kennzahlen (`heatpump_power_heating_kwh` /
+`_hotwater_kwh`, `heatpump_heat_heating_kwh` / `_hotwater_kwh`,
+`heatpump_cop_heating` / `_hotwater`) hinterlegt, je nachdem, was die eigene
+Wärmepumpen-Integration an Sensoren liefert. Ein eigener Analyzer mit
+anlagenspezifischer Logik kommt als neue Datei unter `analysis/plugins/`
 (vorgesehen für eine spätere Ausbaustufe), ohne bestehenden Code zu ändern.
 
 ## Entwicklung

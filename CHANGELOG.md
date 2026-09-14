@@ -8,6 +8,25 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-14
+
+### Fixed
+
+- Sensor-mapping suggestions were unreliable across all plant types: a
+  candidate could be suggested purely from `device_class`/unit matching a
+  metric, with no actual name evidence — so e.g. a heat pump's generic
+  "Stromverbrauch (gesamt)" catalogue entry could grab one of its
+  Heizen/Warmwasser-specific sensors just because both are `energy`/kWh, and
+  in general any energy sensor could be suggested for an unrelated energy
+  metric. A matching hint phrase in the entity's name is now a *required*
+  gate (`ha_bridge/matching.py`) — device_class/unit/token-overlap are only
+  tie-breakers between candidates that already passed that gate, never
+  sufficient on their own. Added the split heat-pump metrics'
+  (Heizen/Warmwasser for power, heat output, and COP) hints with the
+  quantity-specific wording needed to tell them apart (both previously
+  shared only the generic "heizen"/"warmwasser" word, which isn't enough to
+  distinguish a power sensor from a heat-output sensor in the same mode).
+
 ## [0.6.0] - 2026-09-14
 
 ### Added

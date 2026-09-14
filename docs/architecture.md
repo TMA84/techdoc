@@ -119,10 +119,20 @@ ergänzt, ohne bestehenden Code zu ändern.
   unit-getestete Logik ohne HA-Abhängigkeit) bewertet die Entities eines
   gewählten Geräts gegen die `PLANT_TYPE_METRICS`-Kataloghinweise (Name-Keywords,
   `device_class`, Einheit) und schlägt pro noch unzugeordneter Kennzahl höchstens
-  eine Entity vor — ein `state_class`/Kind-Mismatch (Summe vs. Mittelwert)
-  disqualifiziert eine Entity immer, unabhängig vom Namens-Match, da das sonst
-  wieder zu leeren Jahresvergleichen führen würde. Ein Vorschlag wird nie
-  automatisch übernommen, nur per Klick auf "Übernehmen" im Panel.
+  eine Entity vor. Zwei Disqualifikations-/Gate-Regeln, beide aus einem echten
+  Fehlerfall entstanden:
+  1. Ein `state_class`/Kind-Mismatch (Summe vs. Mittelwert) disqualifiziert eine
+     Entity immer, unabhängig vom Namens-Match, da das sonst wieder zu leeren
+     Jahresvergleichen führen würde.
+  2. Ein passender Name-Hinweis (als Substring im Entity-Namen) ist zwingende
+     Voraussetzung für einen Vorschlag — `device_class`/Einheit allein reichen
+     nie aus, sondern sind nur Tie-Breaker zwischen bereits namentlich
+     passenden Kandidaten. Sonst würde z. B. bei einer Wärmepumpe mit
+     getrennten Heizen-/Warmwasser-Sensoren der generische "Stromverbrauch
+     (gesamt)"-Kennzahl-Eintrag einfach den erstbesten Energie-Sensor
+     schnappen, nur weil beide `device_class: energy` haben.
+  Ein Vorschlag wird nie automatisch übernommen, nur per Klick auf
+  "Übernehmen" im Panel.
 
 ## 5. Analysekonzept
 

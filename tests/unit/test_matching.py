@@ -4,6 +4,9 @@ matching = import_module("ha_bridge.matching")
 EntityCandidate = matching.EntityCandidate
 suggest_matches = matching.suggest_matches
 
+const = import_module("const")
+HEATPUMP_METRICS = const.PLANT_TYPE_METRICS["heatpump"]
+
 _PV_METRICS = [
     {
         "key": "pv_yield_kwh",
@@ -73,5 +76,61 @@ def test_no_suggestion_below_minimum_score():
     assert suggestions == []
 
 
+def test_device_class_and_unit_match_alone_is_never_enough():
+    """Regression test: an entity that matches kind/device_class/unit but
+    has no relevant word in its name must never be suggested — this is
+    exactly what caused a heat pump's generic "Stromverbrauch" catalogue
+    entry to grab one of its Heizen/Warmwasser-specific sensors in practice."""
+    entities = [
+        EntityCandidate("sensor.unrelated_energy", "Garagentor Energiezähler", "energy", "total_increasing", "kWh"),
+    ]
+    suggestions = suggest_matches(_PV_METRICS, entities)
+    assert suggestions == []
+
+
 def test_empty_entities_yields_no_suggestions():
     assert suggest_matches(_PV_METRICS, []) == []
+
+
+def test_heatpump_splits_heating_and_hotwater_sensors_correctly():
+    """Regression test for a real user report: a heat pump exposing
+    separate Heizen/Warmwasser sensors must get each mapped to its own
+    metric, not conflated or dropped."""
+    entities = [
+        EntityCandidate(
+            "sensor.wp_stromverbrauch_heizen", "WP Stromverbrauch Heizen", "energy", "total_increasing", "kWh"
+        ),
+        EntityCandidate(
+            "sensor.wp_stromverbrauch_warmwasser",
+            "WP Stromverbrauch Warmwasser",
+            "energy",
+            "total_increasing",
+            "kWh",
+        ),
+        EntityCandidate(
+            "sensor.wp_waermemenge_heizen", "WP Wärmemenge Heizen", "energy", "total_increasing", "kWh"
+        ),
+        EntityCandidate(
+            "sensor.wp_waermemenge_warmwasser",
+            "WP Wärmemenge Warmwasser",
+            "energy",
+            "total_increasing",
+            "kWh",
+        ),
+        EntityCandidate("sensor.wp_cop_heizen", "WP COP Heizen", None, "measurement", None),
+        EntityCandidate("sensor.wp_cop_warmwasser", "WP COP Warmwasser", None, "measurement", None),
+    ]
+
+    suggestions = {s.metric_key: s for s in suggest_matches(HEATPUMP_METRICS, entities)}
+
+    assert suggestions["heatpump_power_heating_kwh"].entity_id == "sensor.wp_stromverbrauch_heizen"
+    assert suggestions["heatpump_power_hotwater_kwh"].entity_id == "sensor.wp_stromverbrauch_warmwasser"
+    assert suggestions["heatpump_heat_heating_kwh"].entity_id == "sensor.wp_waermemenge_heizen"
+    assert suggestions["heatpump_heat_hotwater_kwh"].entity_id == "sensor.wp_waermemenge_warmwasser"
+    assert suggestions["heatpump_cop_heating"].entity_id == "sensor.wp_cop_heizen"
+    assert suggestions["heatpump_cop_hotwater"].entity_id == "sensor.wp_cop_warmwasser"
+    # No combined "gesamt" sensor exists in this fixture, so the plain
+    # (non-split) metrics must not grab one of the split sensors instead.
+    assert "heatpump_power_kwh" not in suggestions
+    assert "heatpump_heat_kwh" not in suggestions
+    assert "heatpump_cop" not in suggestions
