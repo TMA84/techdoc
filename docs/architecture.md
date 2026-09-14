@@ -139,7 +139,8 @@ Sidebar-Panel "TechDoc", umgesetzt in **Lit + TypeScript** (Quelle in
   offene Anomalien), Tab-Navigation, hält Overview-State (Anlagen, Anlagentypen,
   Mängel, Anomalien, Kennzahlen-Katalog), zeigt Fehler-Banner bei fehlgeschlagenen
   Aktionen statt sie stillschweigend zu verschlucken.
-- `techdoc-plant-list`: Anlagenliste + "Anlage anlegen"-Formular.
+- `techdoc-plant-list`: Anlagenliste (mit Bearbeiten/Löschen je Anlage,
+  inkl. Bestätigungsabfrage vor dem Löschen) + "Anlage anlegen"-Formular.
 - `techdoc-plant-detail`: Prüfungen, Mängel, Kennzahlen/Sensor-Zuordnung
   (inkl. Jahresvergleich), Anomalien, Dokumente der ausgewählten Anlage.
 - `techdoc-findings-overview`: anlagenübergreifende Mängel-Übersicht.

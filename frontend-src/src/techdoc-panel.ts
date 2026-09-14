@@ -61,10 +61,6 @@ export class TechdocPanel extends LitElement {
     this._selectedPlantId = event.detail.id;
   }
 
-  private async _onPlantCreated() {
-    await this._loadOverview();
-  }
-
   private async _onChanged() {
     await this._loadOverview();
   }
@@ -154,7 +150,7 @@ export class TechdocPanel extends LitElement {
         .plantTypes=${this._plantTypes}
         .selectedPlantId=${this._selectedPlantId}
         @plant-select=${this._onPlantSelect}
-        @plant-created=${this._onPlantCreated}
+        @techdoc-changed=${this._onChanged}
       ></techdoc-plant-list>
 
       ${selected

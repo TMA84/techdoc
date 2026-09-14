@@ -29,6 +29,16 @@ export const createPlant = (
 ): Promise<{ id: number }> =>
   hass.callWS({ type: "techdoc/plant_create", name, plant_type_id: plantTypeId });
 
+export const updatePlant = (
+  hass: HomeAssistant,
+  plantId: number,
+  fields: { name?: string; plant_type_id?: number }
+): Promise<void> =>
+  hass.callWS({ type: "techdoc/plant_update", plant_id: plantId, ...fields });
+
+export const deletePlant = (hass: HomeAssistant, plantId: number): Promise<void> =>
+  hass.callWS({ type: "techdoc/plant_delete", plant_id: plantId });
+
 export const fetchMetricCatalogue = (hass: HomeAssistant): Promise<MetricCatalogue> =>
   hass.callWS({ type: "techdoc/metric_catalogue" });
 

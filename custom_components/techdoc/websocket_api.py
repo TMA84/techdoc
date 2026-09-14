@@ -83,6 +83,53 @@ async def ws_plant_create(hass: HomeAssistant, connection, msg) -> None:
     connection.send_result(msg["id"], {"id": plant_id})
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "techdoc/plant_update",
+        vol.Required("plant_id"): int,
+        vol.Optional("name"): str,
+        vol.Optional("plant_type_id"): int,
+        vol.Optional("manufacturer"): str,
+        vol.Optional("model"): str,
+        vol.Optional("location"): str,
+        vol.Optional("inspection_interval_months"): int,
+        vol.Optional("status"): str,
+        vol.Optional("notes"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_plant_update(hass: HomeAssistant, connection, msg) -> None:
+    database = _get_database(hass)
+    fields = {
+        key: msg[key]
+        for key in (
+            "name",
+            "plant_type_id",
+            "manufacturer",
+            "model",
+            "location",
+            "inspection_interval_months",
+            "status",
+            "notes",
+        )
+        if key in msg
+    }
+    await database.async_run(database.repository.update_plant, msg["plant_id"], **fields)
+    await _async_request_refresh(hass)
+    connection.send_result(msg["id"], {})
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "techdoc/plant_delete", vol.Required("plant_id"): int}
+)
+@websocket_api.async_response
+async def ws_plant_delete(hass: HomeAssistant, connection, msg) -> None:
+    database = _get_database(hass)
+    await database.async_run(database.repository.delete_plant, msg["plant_id"])
+    await _async_request_refresh(hass)
+    connection.send_result(msg["id"], {})
+
+
 # -- sensor mappings & HA statistics ----------------------------------------
 
 
@@ -518,6 +565,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
         ws_plant_type_list,
         ws_plant_list,
         ws_plant_create,
+        ws_plant_update,
+        ws_plant_delete,
         ws_metric_catalogue,
         ws_sensor_mapping_list,
         ws_sensor_mapping_upsert,

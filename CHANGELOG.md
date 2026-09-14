@@ -8,6 +8,16 @@ possible in minor releases until `1.0.0`).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-14
+
+### Added
+
+- Edit and delete plants from the panel: `techdoc/plant_update` and
+  `techdoc/plant_delete` websocket commands (backed by the existing
+  `repository.update_plant`/`delete_plant`), inline edit form and a delete
+  button with a confirmation prompt (deleting a plant cascades to all its
+  inspections, findings, documents, and sensor mappings).
+
 ## [0.2.0] - 2026-09-14
 
 ### Added

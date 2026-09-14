@@ -49,7 +49,10 @@ Alle sechs geplanten Phasen sind in einer ersten, funktionsfähigen Version umge
 ## Nutzung
 
 1. Im Panel unter "Anlagen" eine Anlage anlegen (Anlagentyp wählen — für PV ist bereits
-   eine Standard-Checkliste sowie Standard-Plausibilitätsregeln hinterlegt).
+   eine Standard-Checkliste sowie Standard-Plausibilitätsregeln hinterlegt). Über
+   "Bearbeiten" lassen sich Name/Anlagentyp nachträglich ändern, über "Löschen" die
+   Anlage inkl. aller zugehörigen Prüfungen, Mängel, Dokumente und Sensor-Zuordnungen
+   entfernen (mit Bestätigungsabfrage).
 2. Anlage anklicken → Sensoren zuordnen (Kennzahl + `entity_id`, z. B. `pv_yield_kwh` →
    `sensor.pv_jahresertrag`) → Jahresvergleich über den Kennzahl-Link abrufbar.
 3. Prüfung starten, Checkliste/Messwerte erfassen, abschließen → nächster Prüftermin wird
